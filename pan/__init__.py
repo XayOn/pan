@@ -13,7 +13,7 @@ import re
 import subprocess
 
 REG = re.compile(r"""(?P<key>[\w\-]+)=(?P<value>[\S\s]*?)($|\s)""")
-STATIC = (Path(__file__).parent / 'static').absolute()
+STATIC = (Path(__file__).parent / 'static' / 'dist').absolute()
 
 
 def kv_pairs(text):
@@ -271,7 +271,7 @@ class Config(Command):
             if opt := self.option('option'):
                 config[option] = opt
 
-        config.write(configfile)
+        config.write(open(configfile, 'w'))
 
 
 APP = web.Application()
@@ -292,11 +292,9 @@ class ConfigView(web.View):
                 config.add_section(key)
             for option in ('ip', 'status', 'remoteip', 'defaultsink'):
                 if opt := in_json[key].get(option):
-                    config[option] = opt
-
-
-async def get_front(_):
-    return web.Response((STATIC / 'index.html').read_text())
+                    config[key][option] = opt
+        config.write(open(self.request.app['configfile'], 'w'))
+        return web.json_response({'status': 'ok'})
 
 
 async def setup_watcher(app):
@@ -325,9 +323,8 @@ class Server(Command):
         APP['configfile'] = configfile
         APP.router.add_routes([
             web.view(f'{prefix}/api/config', ConfigView),
-            web.get(f'{prefix}/', get_front)
         ])
-        APP.router.add_static(f'{prefix}/static', str(STATIC))
+        APP.router.add_static(f'{prefix}/', str(STATIC))
         # APP.on_startup.append(setup_watcher)
         web.run_app(APP, host=self.option('host'), port=int(self.option('port')))
 
