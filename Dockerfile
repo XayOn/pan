@@ -23,13 +23,7 @@ COPY poetry.lock ./
 RUN poetry install --no-dev --no-root
 COPY . ./
 RUN poetry install --no-dev
-
-FROM python:3.9.1-slim as runtime
-
 ENV PATH="$POETRY_PATH/bin:$VENV_PATH/bin:$PATH"
-COPY --from=build $VENV_PATH $VENV_PATH
-COPY --from=build /app/ /app/
-
 EXPOSE 8000
 WORKDIR /app
 CMD "/app/docker-entrypoint.sh"
