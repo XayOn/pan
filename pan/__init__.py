@@ -2,6 +2,7 @@
 
 Setup remote speakers with pulseaudio.
 """
+import logging
 import asyncio
 from pathlib import Path
 from aiohttp import web
@@ -326,7 +327,8 @@ class Server(Command):
         ])
         APP.router.add_static(f'{prefix}/', str(STATIC))
         # APP.on_startup.append(setup_watcher)
-        web.run_app(APP, host=self.option('host'), port=int(self.option('port')))
+        logging.basicConfig(level=logging.DEBUG)
+        web.run_app(APP, host=self.option('host'), port=int(self.option('port'))) 
 
 
 def main():
