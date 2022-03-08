@@ -38,7 +38,7 @@ export default {
   },
   mounted () {
     axios
-      .get('/api/config')
+      .get('api/config')
       .then(response => (this.pains = response.data))
   },
   methods: {
