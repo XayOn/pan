@@ -87,6 +87,7 @@ class PulseInstance:
         """Check status (emitter, receiver, disabled, corrupted)"""
         # On emitters, make sure that the default sink is combined
         # with the RTP sink so we don't lose local sound
+        print(self.combined_sink_status)
         if self.expected_status == 'emitter':
             if self.combined_sink_status == 'ok':
                 if self.get_modules_by_name('module-rtp-send'):
@@ -158,6 +159,7 @@ class PulseInstance:
             # configured and fix it.
             # I was testing if there was a combine sink before, but this i
             # after cleanup, if it's dirty, it'll re-do everything
+            logger.debug("loading combine sink")
             self.load_module('module-combine-sink',
                              f'slaves={self.defaultsink}')
             self.set_defaultsink('combined')
@@ -165,6 +167,7 @@ class PulseInstance:
     def set_as_emitter(self):
         """Set as emitter (source)"""
         logger.debug(f'Loading null sink for rtp on {self.ip}')
+        self.load_module('module-null-sink', 'sink_name=rtp')
         self.load_module('module-combine-sink',
                          f'slaves=rtp,{self.defaultsink}')
         self.set_defaultsink('combined')
@@ -202,10 +205,16 @@ class PulseInstance:
     @property
     def combined_sink_status(self):
         has_module = False
+        defsink = self.defaultsink
+        if ',' in defsink:
+            defsink = list(defsink.split(','))
+        else:
+            defsink = [defsink]
         for mod in self.get_modules_by_name('module-combine-sink'):
             has_module = True
             stat = ['rtp'] if self.expected_status == 'emitter' else []
-            if mod['args']['slaves'] == stat + [self.defaultsink]:
+            logger.debug(f'Combined sink status is {mod["args"]["slaves"]} against {stat + defsink}')
+            if mod['args']['slaves'] == stat + defsink:
                 return 'ok'
         if has_module:
             return 'corrupted'
