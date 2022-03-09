@@ -90,9 +90,7 @@ class PulseInstance:
         print(self.combined_sink_status)
         if self.expected_status == 'emitter':
             if self.combined_sink_status == 'ok':
-                if self.get_modules_by_name('module-rtp-send'):
-                    logger.debug('rtp-send module enabled, sink matches')
-                    return 'emitter'
+                return 'emitter'
             return 'corrupted'
         elif self.expected_status == 'receiver':
             # Check if the remote pulse instance on the associated emitter has
@@ -213,7 +211,6 @@ class PulseInstance:
         for mod in self.get_modules_by_name('module-combine-sink'):
             has_module = True
             stat = ['rtp'] if self.expected_status == 'emitter' else []
-            logger.debug(f'Combined sink status is {mod["args"]["slaves"]} against {stat + defsink}')
             if mod['args']['slaves'] == stat + defsink:
                 return 'ok'
         if has_module:
